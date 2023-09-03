@@ -1,11 +1,12 @@
 import { Editor, MarkdownView, Menu, Plugin } from 'obsidian';
-import ColorBar from './ColorBar';
-import { ColorModal } from "./ColorModal";
-import { RGBConverter } from "./RGBConverter";
+import ColorBar from './colorBar';
+import { ColorModal } from "./colorModal";
+import { RgbConverter } from "./rgbConverter";
 import { DEFAULT_COLOR, DEFAULT_SETTINGS, MAX_CELL_COUNT } from './constants/defaults';
 import contextMenu from './contextMenu';
 import { SettingsTab } from './settings';
 import { ColorsData } from './types/plugin';
+import removeColor from './colorRemover';
 
 export default class ColoredFont extends Plugin {
     curColor: string;
@@ -16,7 +17,7 @@ export default class ColoredFont extends Plugin {
     colorDivs: HTMLDivElement[] = [];
 
     colorBar: ColorBar;
-    rgbConverter = new RGBConverter();
+    rgbConverter = new RgbConverter();
 
     async onload() {
         // -------------------- Variables Init -------------------- //
@@ -38,10 +39,10 @@ export default class ColoredFont extends Plugin {
         // -------------------- Command Implementation -------------------- // 
         this.addCommand({
           id: 'color-text',
-			    name: 'Color Text',
+		      name: 'Color Text',
           hotkeys: [],
           editorCallback: (editor: Editor, view: MarkdownView) => {
-            let selection = editor.getSelection();
+            const selection = editor.getSelection();
             editor.replaceSelection(`<span style="color:${this.curColor}">${selection}</span>`);
 
             const cursorEnd = editor.getCursor("to");
@@ -49,7 +50,7 @@ export default class ColoredFont extends Plugin {
             editor.setCursor(cursorEnd);
           }
         });
-        
+
         this.addCommand({
           id: 'alter-color-palette',
           name: 'Alter Color Palette',
@@ -73,7 +74,17 @@ export default class ColoredFont extends Plugin {
           hotkeys: [],
           callback: () => this.selectColor(this.curIndex == 0 ? (this.cellCount - 1) : this.curIndex - 1)
         })
-    }
+
+        // --------------------  Remove Color -------------------- //
+        this.addCommand({
+          id: "remove-color",
+          name: "Remove Color From Selection / Under Cursor",
+          hotkeys: [],
+          editorCallback:(editor, view) => {
+            removeColor(editor);
+          }
+    });
+  }
 
     openColorModal() {
       new ColorModal(this.app, this, this.curColor, (result) => {
